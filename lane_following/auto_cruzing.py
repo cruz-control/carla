@@ -8,10 +8,6 @@ import numpy as np
 import cv2
 import PIL.Image as Image
 
-if len(sys.argv) != 2:
-    print("Usage: python lane_script.py <model_path>")
-    sys.exit(1)
-
 IM_WIDTH = 1000
 IM_HEIGHT = 1000
 
