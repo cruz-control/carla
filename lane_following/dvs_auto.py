@@ -14,10 +14,14 @@ IM_HEIGHT = 720
 sensor_data = {"image": None}
 
 def process_img(image, sensor_data):
-    i = np.array(image.raw_data)
-    i2 = i.reshape((IM_HEIGHT, IM_WIDTH, 4))
-    i3 = i2[:, :, :3]
-    sensor_data["image"] = i3
+    # Example of converting the raw_data from a carla.DVSEventArray
+    # sensor into a NumPy array and using it as an image
+    dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
+        ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
+    dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
+    # Blue is positive, red is negative
+    dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
+    sensor_data["image"] = dvs_img
     
 
 
@@ -44,7 +48,8 @@ try:
 
     # https://carla.readthedocs.io/en/latest/cameras_and_sensors
     # get the blueprint for this sensor
-    blueprint = blueprint_library.find('sensor.camera.rgb')
+    blueprint = blueprint_library.find('sensor.camera.dvs')
+    
     # change the dimensions of the image
     blueprint.set_attribute('image_size_x', f'{IM_WIDTH}')
     blueprint.set_attribute('image_size_y', f'{IM_HEIGHT}')
@@ -65,7 +70,7 @@ try:
     while True:
         world.tick()
         if sensor_data["image"] is not None:
-            cv2.imshow("rgb", sensor_data["image"])
+            cv2.imshow("", sensor_data["image"])
             cv2.waitKey(1)
 
 
