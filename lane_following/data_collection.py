@@ -2,6 +2,16 @@ import glob
 import os
 import sys
 
+# Function to be called by camera.listen()
+def record(image, vehicle):
+    image.save_to_disk('_out/%06d.png' % image.frame)
+    control = vehicle.get_control()
+    print(control.steer)
+    print(control.throttle)
+    print(control.brake)
+    print("\n")
+    
+
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -67,9 +77,6 @@ def main():
         vehicle.set_location(location)
         print('moved vehicle to %s' % location)
 
-        # Save images from camera to disk
-        camera.listen(lambda image: image.save_to_disk('_out/%06d.png' % image.frame))
-
         # Generate extra vehicles
         transform.location += carla.Location(x=40, y=-3.2)
         transform.rotation.yaw = -180.0
@@ -86,14 +93,10 @@ def main():
                 npc.set_autopilot(True)
                 print('created %s' % npc.type_id)
 
-        # Get vehicle control attributes (try to sync the data collection with the image generation if possible)
-        for i in range(20):
-            control = vehicle.get_control()
-            print(control.steer)
-            print(control.throttle)
-            print(control.brake)
-            print("\n")
-            time.sleep(2)
+        time.sleep(2)
+        # Save images from camera to disk and print current vehicle control attributes
+        camera.listen(lambda image: record(image, vehicle))
+        time.sleep(10)
 
     finally:
         # Destroy actors
