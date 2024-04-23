@@ -13,23 +13,14 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+import SAC.buffer as buffer
+import SAC.networks as networks
+import SAC.sac_torch as sac_torch
+
 IM_WIDTH = 1080
 IM_HEIGHT = 720
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-class DQN(nn.Module):
-
-    def __init__(self, n_observations, n_actions):
-        super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, n_actions)
-
-    def forward(self, x):
-        x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        return self.layer3(x)
 
 sensor_data = {"image": None}
 
@@ -38,8 +29,6 @@ def process_img(image, sensor_data):
     i2 = i.reshape((IM_HEIGHT, IM_WIDTH, 4))
     i3 = i2[:, :, :3]
     sensor_data["image"] = i3
-    
-
 
 actor_list = []
 try:
@@ -82,10 +71,6 @@ try:
     # do something with this sensor
     sensor.listen(lambda data: process_img(data, sensor_data))
 
-    # Initialize DQN for steering, input is image, output is steering
-    dqn = DQN(n_observations=IM_WIDTH*IM_HEIGHT*3, n_actions=1).to(device)
-    optimizer = optim.Adam(dqn.parameters(), lr=0.001)
-
     while True:
         world.tick()
         if sensor_data["image"] is not None:
@@ -97,7 +82,6 @@ try:
             loc = transform.location
             vehicle_loc = vehicle.get_transform().location
             l2_dist = np.sqrt((loc.x - vehicle_loc.x)**2 + (loc.y - vehicle_loc.y)**2)
-            print("Distance: ", l2_dist)
             # Get the image and flatten it
             image = sensor_data["image"]
             image = cv2.resize(image, (IM_WIDTH, IM_HEIGHT))
@@ -108,9 +92,16 @@ try:
             steering = control.steer
             steering = torch.tensor(steering).float().to(device)
             # Get the predicted steering angle
-            pred_steering = dqn(image)
+            pred_steering = 
             # Reward is negative of the absolute distance from the center of the lane
             reward = -l2_dist
+
+            reward = reward * 10
+            print("Reward: ", reward)
+
+            
+
+
 
 
 finally:
