@@ -2,22 +2,24 @@ import gym
 from gym import spaces
 import numpy as np
 import carla
+import torch
 import random
 
 HEIGHT = 256
 WIDTH = 256
 
-class CustomEnv(gym.Env):
-    """Custom Environment that follows gym interface"""
+class CustomEnv(gym.Env):    
     metadata = {'render.modes': ['human']}
 
-    def __init__(self):
+    def __init__(self, device, port=2000):
         super(CustomEnv, self).__init__()
-        # They must be gym.spaces objects   
+        self.device = device
         self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
         self.observation_space = spaces.Box(low=0, high=255, shape= (HEIGHT, WIDTH, 3), dtype=np.uint8)
+        self.sensor_data = {"image": None}
+
         self.actors = []
-        self.client = carla.Client('localhost', 2000)
+        self.client = carla.Client('localhost', port)
         self.client.set_timeout(10.0)
         print("Loading")
 
@@ -45,20 +47,29 @@ class CustomEnv(gym.Env):
         self.sensor = self.world.spawn_actor(self.blueprint, self.spawn_point, attach_to=self.vehicle)
 
         self.actors.append(self.sensor)
-
         self.sensor.listen(lambda data: self.process_img(data))
 
     def process_img(self, image):
         i = np.array(image.raw_data)
         i2 = i.reshape((HEIGHT, WIDTH, 4))
         i3 = i2[:, :, :3]
-        
-
-        
-
+        self.sensor_data["image"] = i3
 
     def step(self, action):
-        # Execute one time step within the environment
+
+        print(action)
+
+        # self.world.tick()
+        # waypoint = self.world.get_map().get_waypoint(self.vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving))
+        # transform = waypoint.transform
+        # loc = transform.location
+        # vehicle_loc = self.vehicle.get_transform().location
+        # l2_dist = np.sqrt((loc.x - vehicle_loc.x)**2 + (loc.y - vehicle_loc.y)**2)
+        # image = self.sensor_data["image"]
+        # control = self.vehicle.get_control()
+        # steering = control.steer
+        # steering = torch.tensor(steering).float().to(self.device)
+        # # Execute one time step within the environment
 
     def reset(self):
         # Reset the state of the environment to an initial state
@@ -67,3 +78,4 @@ class CustomEnv(gym.Env):
 
     def render(self, mode='human', close=False):
         # Render the environment to the screen
+        return
