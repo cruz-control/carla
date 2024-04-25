@@ -42,35 +42,10 @@ try:
     vehicle.set_autopilot(True)  # if you just wanted some NPCs to drive.
 
     actor_list.append(vehicle)
-
-    # https://carla.readthedocs.io/en/latest/cameras_and_sensors
-    # get the blueprint for this sensor
-    blueprint = blueprint_library.find('sensor.camera.rgb')
-    # change the dimensions of the image
-    blueprint.set_attribute('image_size_x', f'{IM_WIDTH}')
-    blueprint.set_attribute('image_size_y', f'{IM_HEIGHT}')
-    blueprint.set_attribute('fov', '110')
-
-    # Obstacle Detector
-    obstacle = blueprint_library.find('sensor.other.obstacle')
-    detector = world.spawn_actor(obstacle, spawn_point, attach_to=vehicle)
-
-
-    # Adjust sensor relative to vehicle
-    spawn_point = carla.Transform(carla.Location(x=2.5, z=0.7))
-
-    # spawn the sensor and attach to vehicle.
-    sensor = world.spawn_actor(blueprint, spawn_point, attach_to=vehicle)
-
-    # add sensor to list of actors
-    actor_list.append(sensor)
-    actor_list.append(detector)
-
-
-    # Generate extra vehicles
+     # Generate extra vehicles
     spawn_point.location += carla.Location(x=40, y=-3.2)
     spawn_point.rotation.yaw = -180.0
-    for _ in range(0, 10):
+    for _ in range(0, 100):
         spawn_point.location.x += 8.0
 
         bp = random.choice(blueprint_library.filter('vehicle'))
@@ -83,14 +58,50 @@ try:
             npc.set_autopilot(True)
             print('created %s' % npc.type_id)
 
+    # https://carla.readthedocs.io/en/latest/cameras_and_sensors
+    # get the blueprint for this sensor
+    blueprint = blueprint_library.find('sensor.camera.rgb')
+    # change the dimensions of the image
+    blueprint.set_attribute('image_size_x', f'{IM_WIDTH}')
+    blueprint.set_attribute('image_size_y', f'{IM_HEIGHT}')
+    blueprint.set_attribute('fov', '110')
+
+    # Adjust sensor relative to vehicle
+    spawn_point = carla.Transform(carla.Location(x=2.5, z=0.7))
+
+    # spawn the sensor and attach to vehicle.
+    sensor = world.spawn_actor(blueprint, spawn_point, attach_to=vehicle)
+
+    # add sensor to list of actors
+    actor_list.append(sensor)
+
     # do something with this sensor
     sensor.listen(lambda data: process_img(data, sensor_data))
+
+    # Obstacle Detector
+    obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
+    obs_bp.set_attribute("only_dynamics",str(True))
+    obs_location = carla.Location(0,0,0)
+    obs_rotation = carla.Rotation(0,0,0)
+    obs_transform = carla.Transform(obs_location,obs_rotation)
+    ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=vehicle, attachment_type=carla.AttachmentType.Rigid)
+    actor_list.append(ego_obs)
+    def obs_callback(obs):
+        print("Obstacle detected:\n"+str(obs)+'\n')
+        print(obs.distance)
+    ego_obs.listen(lambda obs: obs_callback(obs))
 
     while True:
         world.tick()
         if sensor_data["image"] is not None:
             cv2.imshow("rgb", sensor_data["image"])
             cv2.waitKey(1)
+            waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+            transform = waypoint.transform
+            loc = transform.location
+            vehicle_loc = vehicle.get_transform().location
+            l2_dist = np.sqrt((loc.x - vehicle_loc.x)**2 + (loc.y - vehicle_loc.y)**2)
+            # print("Distance: ", l2_dist)
 
 
 finally:
