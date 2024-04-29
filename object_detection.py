@@ -45,7 +45,7 @@ try:
      # Generate extra vehicles
     spawn_point.location += carla.Location(x=40, y=-3.2)
     spawn_point.rotation.yaw = -180.0
-    for _ in range(0, 100):
+    for _ in range(0, 30):
         spawn_point.location.x += 8.0
 
         bp = random.choice(blueprint_library.filter('vehicle'))
@@ -57,6 +57,9 @@ try:
             actor_list.append(npc)
             npc.set_autopilot(True)
             print('created %s' % npc.type_id)
+
+    # Create a transform for the spectator
+    spectator = world.get_spectator()
 
     # https://carla.readthedocs.io/en/latest/cameras_and_sensors
     # get the blueprint for this sensor
@@ -81,6 +84,12 @@ try:
     # Obstacle Detector
     obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
     obs_bp.set_attribute("only_dynamics",str(True))
+    obs_bp.set_attribute("debug_linetrace",str(True))  # This currently doesn't visualize anything
+
+    # Uncommenting the following attributes currently leads to the script instantly ending
+
+    # obs_bp.set_attribute("distance", float(10))
+    # obs_bp.set_attribute("hit_radius", float(3))
     obs_location = carla.Location(0,0,0)
     obs_rotation = carla.Rotation(0,0,0)
     obs_transform = carla.Transform(obs_location,obs_rotation)
@@ -101,6 +110,9 @@ try:
             loc = transform.location
             vehicle_loc = vehicle.get_transform().location
             l2_dist = np.sqrt((loc.x - vehicle_loc.x)**2 + (loc.y - vehicle_loc.y)**2)
+            spec_trans = carla.Transform(vehicle.get_transform().transform(carla.Location(x = -6, z = 2.5)), vehicle.get_transform().rotation)
+            spectator.set_transform(spec_trans)
+
             # print("Distance: ", l2_dist)
 
 
