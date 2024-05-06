@@ -1,5 +1,4 @@
-import gitsac.sac as sac
-import gitsac.replay_memory as replay_memory
+import youtubesac.sac_torch as sac
 
 import carla
 import random
@@ -19,9 +18,6 @@ def process_img(image, sensor_data):
     sensor_data["image"] = i3
 
 actor_list = []
-
-agent = sac.SAC(HEIGHT * WIDTH * CHANNELS, 1, None)
-memory = replay_memory.ReplayMemory(1000000, 1)
 
 try:
     client = carla.Client('localhost', 2000)
@@ -75,8 +71,10 @@ try:
             l2_dist = np.sqrt((loc.x - vehicle_loc.x)**2 + (loc.y - vehicle_loc.y)**2)
             print("Distance: ", l2_dist)
             image = sensor_data["image"]
-            #flatten image
+            # flatten image
             image = image.flatten()
+            
+
 
 finally:
     print('destroying actors')
