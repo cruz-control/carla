@@ -71,6 +71,7 @@ try:
             l2_dist = np.sqrt((loc.x - vehicle_loc.x)**2 + (loc.y - vehicle_loc.y)**2)
             print("Distance: ", l2_dist)
             image = sensor_data["image"]
+            
             # flatten image
             image = image.flatten()
             
