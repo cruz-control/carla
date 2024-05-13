@@ -4,6 +4,7 @@ import random
 import numpy as np
 import cv2
 from torchvision import transforms
+import torch as T
 
 HEIGHT = 224
 WIDTH = 224
@@ -12,7 +13,7 @@ CHANNELS = 3
 sensor_data = {"image": None}
 
 
-agent = Agent(input_dims=(HEIGHT, WIDTH, CHANNELS), n_actions=1, max_size=1000)
+agent = Agent(input_dims=(CHANNELS, HEIGHT, WIDTH), n_actions=1, max_size=1000)
 
 
 def process_img(image, sensor_data):
@@ -21,12 +22,6 @@ def process_img(image, sensor_data):
     i3 = i2[:, :, :3]
     sensor_data["image"] = i3
 
-preprocess = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
 
 actor_list = []
 
@@ -76,21 +71,27 @@ try:
             cv2.imshow("rgb", sensor_data["image"])
             cv2.waitKey(1)
 
-            image = sensor_data["image"]
-            observation = image
+            transform = transforms.Compose(
+                [
+                    transforms.ToPILImage(),
+                    transforms.ToTensor(),
+                ]
+            )
+
+            observation = transform(sensor_data["image"])
 
             action = agent.choose_action(observation)
 
             steering = action[0]
-            throttle = 0.5
+            throttle = 0.2
             brake = 0.0
 
-            control = carla.VehicleControl(throttle, steering, brake)
+            control = carla.VehicleControl(throttle, steering.item(), brake)
             vehicle.apply_control(control)
 
             world.tick()
 
-            observation_ = image
+            observation_ = transform(sensor_data["image"])
 
             waypoint = world.get_map().get_waypoint(
                 vehicle.get_location(),
@@ -121,4 +122,5 @@ finally:
     print("destroying actors")
     for actor in actor_list:
         actor.destroy()
+    agent.save_models()
     print("done.")

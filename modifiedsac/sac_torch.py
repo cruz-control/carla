@@ -31,12 +31,7 @@ class Agent:
 
         self.preprocess = transforms.Compose(
             [
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
+                transforms.ToTensor()
             ]
         )
 
@@ -60,7 +55,7 @@ class Agent:
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation):
-        state = self.preprocess(observation).to(self.actor.device)
+        state = observation.to(self.actor.device)
         state = state.unsqueeze(0)
 
         actions, _ = self.actor.sample_normal(state, reparameterize=False)
@@ -114,9 +109,11 @@ class Agent:
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)
-        state_ = self.preprocess(new_state).to(self.actor.device)
-        state = self.preprocess(state).to(self.actor.device)
+        state_ = T.tensor(new_state, dtype=T.float).to(self.actor.device)
+        state = T.tensor(state, dtype=T.float).to(self.actor.device)
         action = T.tensor(action, dtype=T.float).to(self.actor.device)
+
+        print("state shape: ", state.shape)
 
         value = self.value(state).view(-1)
         value_ = self.target_value(state_).view(-1)

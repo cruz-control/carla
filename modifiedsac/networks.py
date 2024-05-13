@@ -123,6 +123,7 @@ class ValueNetwork(nn.Module):
     def forward(self, state):
         state = self.alex_net(state)
         state = self.avgpool(state)
+        state = T.flatten(state, 1)
 
         state_value = self.fc1(state)
         state_value = F.relu(state_value)
@@ -193,6 +194,7 @@ class ActorNetwork(nn.Module):
     def forward(self, state):
         state = self.alex_net(state)
         state = self.avgpool(state)
+        state = T.flatten(state, 1)
 
         prob = self.fc1(state)
         prob = F.relu(prob)
