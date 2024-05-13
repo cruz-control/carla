@@ -41,7 +41,7 @@ try:
     spawn_point = random.choice(world.get_map().get_spawn_points())
 
     vehicle = world.spawn_actor(bp, spawn_point)
-    vehicle.set_autopilot(True)  # if you just wanted some NPCs to drive.
+    vehicle.set_autopilot(False)  # if you just wanted some NPCs to drive.
 
     actor_list.append(vehicle)
 
