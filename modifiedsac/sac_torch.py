@@ -1,5 +1,6 @@
 import os
 import torch as T
+from torchvision import transforms
 import torch.nn.functional as F
 import numpy as np
 from buffer import ReplayBuffer
@@ -28,28 +29,39 @@ class Agent:
         self.batch_size = batch_size
         self.n_actions = n_actions
 
+        self.preprocess = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+
         self.actor = ActorNetwork(
             alpha,
             256 * 6 * 6,
-            4096,
             n_actions=n_actions,
             name="actor",
             max_action=max_action,
         )
         self.critic_1 = CriticNetwork(
-            beta, 256 * 6 * 6, 4096, n_actions=n_actions, name="critic_1"
+            beta, 256 * 6 * 6, n_actions=n_actions, name="critic_1"
         )
         self.critic_2 = CriticNetwork(
-            beta, 256 * 6 * 6, 4096, n_actions=n_actions, name="critic_2"
+            beta, 256 * 6 * 6, n_actions=n_actions, name="critic_2"
         )
-        self.value = ValueNetwork(beta, 256 * 6 * 6, 4096, name="value")
-        self.target_value = ValueNetwork(beta, 256 * 6 * 6, 4096, name="target_value")
+        self.value = ValueNetwork(beta, 256 * 6 * 6, name="value")
+        self.target_value = ValueNetwork(beta, 256 * 6 * 6, name="target_value")
 
         self.scale = reward_scale
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation):
-        state = observation.to(self.actor.device)
+        state = T.tensor([observation], dtype=T.float).to(self.actor.device)
+
         actions, _ = self.actor.sample_normal(state, reparameterize=False)
 
         return actions.cpu().detach().numpy()[0]

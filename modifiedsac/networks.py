@@ -46,7 +46,7 @@ class CriticNetwork(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
 
-        self.fc1 = nn.Linear((input_dims[0] + n_actions), self.fc1_dims)
+        self.fc1 = nn.Linear((input_dims + n_actions), self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.q = nn.Linear(self.fc2_dims, 1)
 
@@ -111,7 +111,7 @@ class ValueNetwork(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
 
-        self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
+        self.fc1 = nn.Linear(self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, fc2_dims)
         self.v = nn.Linear(self.fc2_dims, 1)
 
@@ -180,7 +180,7 @@ class ActorNetwork(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
 
-        self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
+        self.fc1 = nn.Linear(self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.mu = nn.Linear(self.fc2_dims, self.n_actions)
         self.sigma = nn.Linear(self.fc2_dims, self.n_actions)
