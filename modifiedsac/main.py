@@ -10,7 +10,7 @@ HEIGHT = 224
 WIDTH = 224
 CHANNELS = 3
 
-sensor_data = {"image": None}
+sensor_data = {"image": None, "collision": False}
 
 
 agent = Agent(input_dims=(CHANNELS, HEIGHT, WIDTH), n_actions=1, max_size=1000)
@@ -21,6 +21,10 @@ def process_img(image, sensor_data):
     i2 = i.reshape((HEIGHT, WIDTH, 4))
     i3 = i2[:, :, :3]
     sensor_data["image"] = i3
+
+
+def process_collision(event):
+    sensor_data["collision"] = True
 
 
 actor_list = []
@@ -57,13 +61,20 @@ try:
     spawn_point = carla.Transform(carla.Location(x=2.5, z=0.7))
 
     # spawn the sensor and attach to vehicle.
-    sensor = world.spawn_actor(blueprint, spawn_point, attach_to=vehicle)
+    rgb_camera = world.spawn_actor(blueprint, spawn_point, attach_to=vehicle)
 
     # add sensor to list of actors
-    actor_list.append(sensor)
+    actor_list.append(rgb_camera)
 
     # do something with this sensor
-    sensor.listen(lambda data: process_img(data, sensor_data))
+    rgb_camera.listen(lambda data: process_img(data, sensor_data))
+
+    # collision sensor
+    col_bp = blueprint_library.find("sensor.other.collision")
+    col_sensor = world.spawn_actor(col_bp, spawn_point, attach_to=vehicle)
+    actor_list.append(col_sensor)
+
+    col_sensor.listen(lambda event: process_collision(event))
 
     while True:
         world.tick()
@@ -112,10 +123,17 @@ try:
             )
 
             reward = -l2_dist
-            done = False
+
+            if sensor_data["collision"]:
+                reward = -200
+                done = True
 
             agent.remember(observation, action, reward, observation_, done)
             agent.learn()
+
+            if done:
+                # reset the environment
+                vehicle.set_transform(spawn_point)
 
 
 finally:
