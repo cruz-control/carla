@@ -60,7 +60,8 @@ class Agent:
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation):
-        state = T.tensor([observation], dtype=T.float).to(self.actor.device)
+        state = self.preprocess(observation).to(self.actor.device)
+        state = state.unsqueeze(0)
 
         actions, _ = self.actor.sample_normal(state, reparameterize=False)
 
@@ -113,8 +114,8 @@ class Agent:
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)
-        state_ = T.tensor(new_state, dtype=T.float).to(self.actor.device)
-        state = T.tensor(state, dtype=T.float).to(self.actor.device)
+        state_ = self.preprocess(new_state).to(self.actor.device)
+        state = self.preprocess(state).to(self.actor.device)
         action = T.tensor(action, dtype=T.float).to(self.actor.device)
 
         value = self.value(state).view(-1)
