@@ -42,9 +42,9 @@ try:
     bp = blueprint_library.filter("model3")[0]
     print(bp)
 
-    spawn_point = random.choice(world.get_map().get_spawn_points())
+    spawn_point_vehicle = random.choice(world.get_map().get_spawn_points())
 
-    vehicle = world.spawn_actor(bp, spawn_point)
+    vehicle = world.spawn_actor(bp, spawn_point_vehicle)
     vehicle.set_autopilot(False)  # if you just wanted some NPCs to drive.
 
     actor_list.append(vehicle)
@@ -78,6 +78,8 @@ try:
 
     while True:
         world.tick()
+        done = False
+        sensor_data["collision"] = False
         if sensor_data["image"] is not None:
             cv2.imshow("rgb", sensor_data["image"])
             cv2.waitKey(1)
@@ -133,7 +135,7 @@ try:
 
             if done:
                 # reset the environment
-                vehicle.set_transform(spawn_point)
+                vehicle.set_transform(spawn_point_vehicle)
 
 
 finally:
