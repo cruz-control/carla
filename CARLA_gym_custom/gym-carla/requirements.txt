@@ -1,0 +1,13 @@
+carla
+future
+numpy; python_version < '3.0'
+numpy==1.18.4; python_version >= '3.0'
+pygame==2.5.2
+matplotlib
+open3d
+Pillow
+gym==0.12.5
+scikit-image==0.16.2
+tensorflow==1.15.0; python_version <= '3.7'
+stable_baselines
+protobuf==3.20.*
