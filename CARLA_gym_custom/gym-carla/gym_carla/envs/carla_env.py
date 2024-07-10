@@ -335,7 +335,7 @@ class CarlaEnv(gym.Env):
 
       self.vis.poll_events()
       self.vis.update_renderer()
-      self.vis.capture_screen_image(filename="/home/user/Desktop/lidar_temp_img.png")
+      self.vis.capture_screen_image(filename="lidar_temp_img.png")
 
 
     thread_update3d = threading.Thread(target=update_open3d)
@@ -552,7 +552,7 @@ class CarlaEnv(gym.Env):
     self.display.blit(birdeye_surface, (0, 0))
 
 
-    img = Image.open("/home/user/Desktop/lidar_temp_img.png")
+    img = Image.open("lidar_temp_img.png")
     self.lidar_img = np.array(img)
     lidar_arr = np.zeros((1, self.obs_size, self.obs_size, 3))
     lidar_arr = lidar_arr.astype(np.float32)
