@@ -8,7 +8,7 @@ The run.py file runs a DQN algorithm from stable_baselines, using the gym enviro
 Run the following:
 4. pip3 install -r requirements.txt
 5. pip3 install -e .
-6. export PYTHONPATH=$PYTHONPATH:<path to CARLA installation folder/PythonAPI/carla/dist/carla-<version>-py3...>
+6. export PYTHONPATH=$PYTHONPATH:<path to CARLA installation folder/PythonAPI/carla/dist/carla-"replace with version"-py3...>
 7. Modify run.py with the port number you are running CARLA on, as well as any other parameters you would like to change.
 8. python3 run.py
 
