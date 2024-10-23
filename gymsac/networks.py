@@ -3,6 +3,7 @@ import torch as T
 import torch.nn.functional as F
 import torch.nn as nn
 import torch.optim as optim
+import snntorch as snn
 from torch.distributions.normal import Normal
 import numpy as np
 
@@ -22,14 +23,23 @@ class CriticNetwork(nn.Module):
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.q = nn.Linear(self.fc2_dims, 1)
 
+        self.lif1 = snn.Leaky(beta=beta)
+        self.mem1 = self.lif1.init_leaky()
+        # self.lif2 = snn.Leaky(beta=beta)
+        # self.mem2 = self.lif2.init_leaky()
+
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
 
+    def reset(self):
+        self.mem1 = self.lif1.init_leaky()
+        # self.mem2 = self.lif2.init_leaky()
+
     def forward(self, state, action):
         action_value = self.fc1(T.cat([state, action], dim=1))
-        action_value = F.relu(action_value)
+        action_value, self.mem1 = self.lif1(action_value, self.mem1)
         action_value = self.fc2(action_value)
         action_value = F.relu(action_value)
 
@@ -58,14 +68,23 @@ class ValueNetwork(nn.Module):
         self.fc2 = nn.Linear(self.fc1_dims, fc2_dims)
         self.v = nn.Linear(self.fc2_dims, 1)
 
+        self.lif1 = snn.Leaky(beta=beta)
+        self.mem1 = self.lif1.init_leaky()
+        # self.lif2 = snn.Leaky(beta=beta)
+        # self.mem2 = self.lif2.init_leaky()
+
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
+    
+    def reset(self):
+        self.mem1 = self.lif1.init_leaky()
+        # self.mem2 = self.lif2.init_leaky()
 
     def forward(self, state):
         state_value = self.fc1(state)
-        state_value = F.relu(state_value)
+        state_value, self.mem1 = self.lif1(state_value, self.mem1)
         state_value = self.fc2(state_value)
         state_value = F.relu(state_value)
 
@@ -79,9 +98,11 @@ class ValueNetwork(nn.Module):
     def load_checkpoint(self):
         self.load_state_dict(T.load(self.checkpoint_file))
 
+beta = 0.95
+
 class ActorNetwork(nn.Module):
     def __init__(self, alpha, input_dims, max_action, fc1_dims=256, 
-            fc2_dims=256, n_actions=2, name='actor', chkpt_dir='tmp/sac'):
+            fc2_dims=256, n_actions=2, name='actor', chkpt_dir='tmp/sac', beta=beta):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -98,14 +119,23 @@ class ActorNetwork(nn.Module):
         self.mu = nn.Linear(self.fc2_dims, self.n_actions)
         self.sigma = nn.Linear(self.fc2_dims, self.n_actions)
 
+        self.lif1 = snn.Leaky(beta=beta)
+        self.mem1 = self.lif1.init_leaky()
+        # self.lif2 = snn.Leaky(beta=beta)
+        # self.mem2 = self.lif2.init_leaky()
+
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
 
+    def reset(self):
+        self.mem1 = self.lif1.init_leaky()
+        # self.mem2 = self.lif2.init_leaky()
+
     def forward(self, state):
         prob = self.fc1(state)
-        prob = F.relu(prob)
+        prob, self.mem1 = self.lif1(prob, self.mem1)
         prob = self.fc2(prob)
         prob = F.relu(prob)
 
