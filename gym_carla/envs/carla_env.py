@@ -119,6 +119,8 @@ class CarlaEnv(gym.Env):
     self.lidar_bp.set_attribute('channels', '32')
     self.lidar_bp.set_attribute('range', '5000')
 
+    # # Radar sensor
+    # self.radar_bp = self.world.get_blueprint_library().find('sensor.other.radar')
     # Camera sensor
     self.camera_img = np.zeros((self.obs_size, self.obs_size, 3), dtype=np.uint8)
     self.camera_trans = carla.Transform(carla.Location(x=0.8, z=1.7))
@@ -493,7 +495,8 @@ class CarlaEnv(gym.Env):
     point_cloud = []
     # Get point cloud data
     for location in self.lidar_data:
-      point_cloud.append([location.x, location.y, -location.z])
+      point = location.point
+      point_cloud.append([point.x, point.y, -point.z])
     point_cloud = np.array(point_cloud)
     # Separate the 3D space to bins for point cloud, x and y is set according to self.lidar_bin,
     # and z is set to be two bins.
