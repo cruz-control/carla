@@ -28,7 +28,8 @@ class Agent():
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation):
-        state = T.Tensor([observation]).to(self.actor.device)
+        state = T.Tensor([observation[0]]).to(self.actor.device)
+        state = state.flatten()
         actions, _ = self.actor.sample_normal(state, reparameterize=False)
 
         return actions.cpu().detach().numpy()[0]
@@ -50,7 +51,7 @@ class Agent():
             value_state_dict[name] = tau*value_state_dict[name].clone() + \
                     (1-tau)*target_value_state_dict[name].clone()
 
-        self.target_value.load_state_dict(value_state_dict)
+        self.target_value.load_state_dict(value_state_dict, strict=False)
 
     def save_models(self):
         print('.... saving models ....')

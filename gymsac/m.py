@@ -1,22 +1,29 @@
-import gym
+import gymnasium as gym
 import numpy as np
 from sac_torch import Agent
 from utils import plot_learning_curve
+# "meow meow meow meow" - Sanya
 
 if __name__ == '__main__':
-    env = gym.make("CarRacing-v2", render_mode="rgb_array", lap_complete_percent=0.95, domain_randomize=False, continuous=False)
+    env = gym.make("CarRacing-v3", render_mode="rgb_array", lap_complete_percent=0.95, domain_randomize=False, continuous=True)
 
-    agent = Agent(input_dims=env.observation_space.shape, env=env,
-            n_actions=env.action_space.shape[0])
+    print("action space shape:", env.action_space.shape)
+    print("observation space shape:", env.observation_space.shape)
+
+    input = env.observation_space.shape[0] * env.observation_space.shape[1] * env.observation_space.shape[2]
+
+    agent = Agent(input_dims=input, n_actions=env.action_space.shape[0], max_size=100)
     n_games = 250
+
     # uncomment this line and do a mkdir tmp && mkdir video if you want to
     # record video of the agent playing the game.
-    #env = wrappers.Monitor(env, 'tmp/video', video_callable=lambda episode_id: True, force=True)
-    filename = 'inverted_pendulum.png'
+    # env = wrappers.Monitor(env, 'tmp/video', video_callable=lambda episode_id: True, force=True)
+
+    filename = '2d_car.png'
 
     figure_file = 'plots/' + filename
 
-    best_score = env.reward_range[0]
+    best_score = 0
     score_history = []
     load_checkpoint = False
 
