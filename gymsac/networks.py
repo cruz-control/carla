@@ -134,9 +134,11 @@ class ActorNetwork(nn.Module):
         # self.mem2 = self.lif2.init_leaky()
 
     def forward(self, state):
-        
+        print(self.input_dims)
+        print(state.shape)
+        print("HERE")
         prob = self.fc1(state)
-        prob, self.mem1 = self.lif1(prob, self.mem1)
+        prob = F.relu(prob)
         prob = self.fc2(prob)
         prob = F.relu(prob)
 
@@ -149,8 +151,6 @@ class ActorNetwork(nn.Module):
 
     def sample_normal(self, state, reparameterize=False):
         mu, sigma = self.forward(state)
-        print(mu)
-        print(sigma)
         probabilities = Normal(mu, sigma)
 
         if reparameterize:
@@ -158,10 +158,10 @@ class ActorNetwork(nn.Module):
         else:
             actions = probabilities.sample()
 
-        action = T.tanh(actions)*T.tensor(self.max_action)
+        action = T.tanh(actions)*T.tensor(self.max_action).to(self.device)
         log_probs = probabilities.log_prob(actions)
-        log_probs -= T.log(1-action.pow(2) + self.reparam_noise)
-        log_probs = log_probs.sum(1, keepdim=True)
+        log_probs -= T.log(1-action.pow(2)+self.reparam_noise)
+        log_probs = log_probs.sum(0, keepdim=True)
 
         return action, log_probs
 

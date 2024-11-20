@@ -12,8 +12,8 @@ if __name__ == '__main__':
 
     input = env.observation_space.shape[0] * env.observation_space.shape[1] * env.observation_space.shape[2]
 
-    agent = Agent(input_dims=input, n_actions=env.action_space.shape[0], max_size=100)
-    n_games = 250
+    agent = Agent(input_dims=input, n_actions=env.action_space.shape[0], max_size=10000)
+    n_games = 2503
 
     # uncomment this line and do a mkdir tmp && mkdir video if you want to
     # record video of the agent playing the game.
@@ -35,14 +35,34 @@ if __name__ == '__main__':
         observation = env.reset()
         done = False
         score = 0
+
         while not done:
-            action = agent.choose_action(observation)
-            observation_, reward, done, info = env.step(action)
+            print(observation[0].shape)
+            img = np.array(observation[0])
+            print(img.shape)
+            flat_img = img.flatten()
+            print("HERE2")
+            print(flat_img.shape)
+
+            action = agent.choose_action(flat_img)
+            observation_, reward, terminated, truncated, info = env.step(action)
+            
+            done = False
+
+            if terminated or truncated:
+                done = True
+
             score += reward
-            agent.remember(observation, action, reward, observation_, done)
+
+            img_ = np.array(observation_[0])
+            flat_img_ = img_.flatten()
+
+            agent.remember(flat_img, action, reward, flat_img_, done)
+
             if not load_checkpoint:
                 agent.learn()
             observation = observation_
+
         score_history.append(score)
         avg_score = np.mean(score_history[-100:])
 
